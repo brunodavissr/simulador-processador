@@ -1,4 +1,4 @@
-# Simulador de Processador (Assembly Didático em C)
+# Simulador de Processador
 
 ## 🧠 Objetivo
 
