@@ -4,6 +4,21 @@
 
 Este projeto tem como objetivo simular uma arquitetura de processador simples
 
+---
+
+## ⚙️ Funcionalidades
+
+- Interpretação de instruções em assembly didático
+- Registradores simulados (ex: R0 até R15)
+- Memória RAM simulada
+- Instruções aritméticas, lógicas e de controle de fluxo
+- Flags de condição: Zero (Z), Negativo (N), Carry (C), Overflow (O)
+- Suporte a saltos condicionais e incondicionais (JMP, JZ, etc.)
+
+---
+
+## 🔄 Instruções implementadas
+
 | Instrução  | Descrição                      | Exemplo           |
 |------------|--------------------------------|-------------------|
 | LOAD       | Carrega valor em registrador   | `LOAD R1, 5`      |
@@ -15,12 +30,3 @@ Este projeto tem como objetivo simular uma arquitetura de processador simples
 | JZ         | Salta se Zero flag ativa       | `JZ FIM`          |
 | JMP        | Salta incondicionalmente       | `JMP INICIO`      |
 | HALT       | Encerra execução               | `HALT`            |
-
-## ⚙️ Funcionalidades
-
-- Interpretação de instruções em assembly didático
-- Registradores simulados (ex: R0 até R15)
-- Memória RAM simulada
-- Instruções aritméticas, lógicas e de controle de fluxo
-- Flags de condição: Zero (Z), Negativo (N), Carry (C), Overflow (O)
-- Suporte a saltos condicionais e incondicionais (JMP, JZ, etc.)
