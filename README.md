@@ -8,12 +8,14 @@ Este projeto tem como objetivo simular uma arquitetura de processador simples
 
 ## ⚙️ Funcionalidades
 
+- Entrar com instruções em formato hexadecimal através de arquivo de texto
 - Interpretação de instruções em assembly didático
 - Registradores simulados (ex: R0 até R15)
 - Memória RAM simulada
 - Instruções aritméticas, lógicas e de controle de fluxo
 - Flags de condição: Zero (Z), Negativo (N), Carry (C), Overflow (O)
 - Suporte a saltos condicionais e incondicionais (JMP, JZ, etc.)
+- Saída deverá conter o valor de cada um dos registradores após a realização das instruções
 
 ---
 
