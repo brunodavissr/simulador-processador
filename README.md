@@ -36,7 +36,7 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | R1280       | 128 bits  | 0x0C   | Uso genérico                            |
 | R1281       | 128 bits  | 0x0D   | Uso genérico                            |
 | FLAG        | 8 bits    | 0x0E   | Armazena as flags C, O, N, Z (0000CONZ) |
-| DESV        | 32 bits   | 0x0F   | Guarda endereço para desvio (JMP)       |
+| DESV        | 32 bits   | 0x0F   | Guarda endereço para desvio             |
 
 ---
 
