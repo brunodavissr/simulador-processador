@@ -3,15 +3,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-extern void processador(uint8_t *memoria, uint8_t *registradores, int tamanho_memoria);
+extern void processador(uint8_t *memoria, int quantidade_instrucoes);
 
 int main() {
     FILE *arquivo;
-    char hex_byte[3] = {0};
+    char byte_hexadecimal[3] = {0};
     uint8_t memoria[1024];
-    uint8_t registradores[256] = {0};
-    int memoria_index = 0;
-    int pos = 0;
+    int quantidade_instrucoes = 0;
+    int index = 0;
 
     arquivo = fopen("instrucoes.txt", "r");
     if (arquivo == NULL) {
@@ -31,19 +30,19 @@ int main() {
             return 2;
         }
 
-        hex_byte[pos++] = c;
+        byte_hexadecimal[index++] = c;
 
-        if (pos == 2) {
+        if (index == 2) {
             unsigned int valor;
-            sscanf(hex_byte, "%02x", &valor);
-            memoria[memoria_index++] = (uint8_t)valor;
-            pos = 0;
+            sscanf(byte_hexadecimal, "%02x", &valor);
+            memoria[quantidade_instrucoes++] = (uint8_t)valor;
+            index = 0;
         }
     }
 
     fclose(arquivo);
 
-    processador(memoria, registradores, memoria_index);
+    processador(memoria, quantidade_instrucoes);
 
     return 0;
 }
