@@ -6,14 +6,9 @@ global processador
 ; 0x04-0x07: R160-R163 (16-bit)
 ; 0x08-0x0B: R320-R323 (32-bit)
 ; 0x0C-0x0D: R1280-R1281 (128-bit)
-; 0x0E: Registrador FLAG (8-bit)
-; 0x0F: Registrador DESV (32-bit)
+; 0x0E: Registrador DESV (32-bit)
 
 processador:
-    push ebp
-    mov ebp, esp
-    pusha ; salva todos os registradores gerais
-    
     ; Obter parâmetros
     mov esi, [ebp+8]    ; ponteiro para memoria
     mov edi, [ebp+12]   ; ponteiro para registradores
@@ -126,54 +121,31 @@ processador:
 
 .jz:
     ; Saltar se flag Z = 1
-    test byte [edi + 0x0E], 0x01
-    jnz .do_jump
-    add dword [edi + 0x0F], 4  ; Pular endereço se não for saltar
+    add dword [edi + 0x0F], 4  ; Pular endereço 
     jmp .execute_inst
 
 .jnz:
     ; Saltar se flag Z = 0
-    test byte [edi + 0x0E], 0x01
-    jz .do_jump
-    add dword [edi + 0x0F], 4  ; Pular endereço se não for saltar
+    add dword [edi + 0x0F], 4  ; Pular endereço 
     jmp .execute_inst
 
 .jl:
     ; Saltar se N ≠ O
-    mov al, [edi + 0x0E]
-    and al, 0x06       ; Isolar flags N e O
-    cmp al, 0x02       ; N setado, O não setado
-    je .do_jump
-    cmp al, 0x04       ; N não setado, O setado
-    je .do_jump
-    add dword [edi + 0x0F], 4  ; Pular endereço se não for saltar
+    add dword [edi + 0x0F], 4  ; Pular endereço 
     jmp .execute_inst
 
 .jg:
     ; Saltar se Z=0 e N=O
-    mov al, [edi + 0x0E]
-    test al, 0x01      ; Flag Z
-    jnz .skip_jump
-    and al, 0x06       ; Isolar flags N e O
-    cmp al, 0x00       ; Ambos limpos
-    je .do_jump
-    cmp al, 0x06       ; Ambos setados
-    je .do_jump
-.skip_jump:
     add dword [edi + 0x0F], 4
     jmp .execute_inst
 
 .jc:
     ; Saltar se flag C = 1
-    test byte [edi + 0x0E], 0x08
-    jnz .do_jump
     add dword [edi + 0x0F], 4
     jmp .execute_inst
 
 .jnc:
     ; Saltar se flag C = 0
-    test byte [edi + 0x0E], 0x08
-    jz .do_jump
     add dword [edi + 0x0F], 4
     jmp .execute_inst
 
@@ -191,13 +163,8 @@ processador:
 .end_exe:
     ; Imprimir valores dos registradores
     call print_registers
-    
-    popa
-    mov esp, ebp
-    pop ebp
     ret
 
 print_registers:
     ; Implementar impressão de registradores
-    ; Exibir todos os valores dos registradores em formato legível
     ret
