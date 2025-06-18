@@ -1,6 +1,8 @@
 section .text
 global processador
 
+; Mano se tiver qualquer coisa que quer mudar ou melhorar, pode mudar 
+
 ; Layout dos registradores na memória:
 ; 0x00-0x03: R80-R83 (8-bit)
 ; 0x04-0x07: R160-R163 (16-bit)
@@ -174,6 +176,7 @@ get_reg_size:
     rep movsb
 
     ; Restaura edi (importante!)
+    mov esi, [ebp+4]     ; recupera ponteiro de memória
     mov edi, [ebp+8]     ; recupera ponteiro de registradores
     jmp .execute_inst
 
@@ -193,7 +196,8 @@ get_reg_size:
 
     ; Atualiza PC e restaura edi
     add [edi + 0x0E], edx
-    mov edi, [ebp+8]
+    mov esi, [ebp+4]      ; restaura ponteiro de memória
+    mov edi, [ebp+8]      ; restaura ponteiro de registradores
     jmp .execute_inst
 
 .load_memdir:
@@ -341,12 +345,10 @@ get_reg_size:
     and ebx, 0x0F       ; registrador destino
     
     ; Determinar tamanhos dos registradores e realizar adição
-    ; Implementar baseado nos tamanhos dos registradores
-    ; Configurar flags 
     jmp .execute_inst
 
 .sub:
-    ; Similar a ADD mas com subtração
+    ; Similar a ADD
     jmp .execute_inst
 
 .and:
