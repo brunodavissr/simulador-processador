@@ -1,7 +1,15 @@
+section .bss
+    registradores_8 resb 4
+    registradores_16 resw 4
+    registradores_32 resd 5
+    registradores_128 resq 2
+
+section .data
+
+
 section .text
 global processador
 
-; Mano se tiver qualquer coisa que quer mudar ou melhorar, pode mudar 
 
 ; Layout dos registradores na memória:
 ; 0x00-0x03: R80-R83 (8-bit)
@@ -10,39 +18,16 @@ global processador
 ; 0x0C-0x0D: R1280-R1281 (128-bit)
 ; 0x0E: Registrador DESV (32-bit)
 
-; Esta implementação usa a seguinte estratégia para registradores temporários:
-; ebp: Offset do registrador destino
-; esp: Offset do registrador fonte
-; edx: Tamanho dos dados
-; eax, ebx, ecx: Uso geral temporário
-
-; Após cada operação de cópia (rep movsb), restauramos:
-; esi: Ponteiro para memória de instruções
-; edi: Ponteiro para área de registradores
-
 processador:
     ; Obter parâmetros
-    mov esi, [ebp+4]    ; ponteiro para memoria
-    mov edi, [ebp+8]   ; ponteiro para registradores
-    mov ecx, [ebp+12]   ; tamanho_memoria
-    
-    ; Inicializar contador de programa
-    xor eax, eax
-    mov [edi + 0x0F], eax  ; DESV começa em 0 (será usado como PC)
-    
+    movzx ebx, byte [rdi]
+
     ; Loop principal de execução
 .execute_inst:
-    ; Verificar se chegou ao final da memória
-    mov eax, [edi + 0x0E]  ; Obter PC atual (DESV)
-    cmp eax, ecx
-    jge .end_exe
-    
-    ; Buscar instrução
-    movzx ebx, byte [esi + eax] ;lê o proximo byte
-    inc eax ;incrementa PC
-    mov [edi + 0x0E], eax  ; Atualiza PC
     
     ; Decodificar e executar instrução
+    cmp ebx, 0x0F
+    je .halt 
     cmp ebx, 0x00
     je .load
     cmp ebx, 0x01
@@ -73,9 +58,9 @@ processador:
     je .jc
     cmp ebx, 0x0E
     je .jnc
-    cmp ebx, 0x0F
-    je .halt
     
+    ;error
+    ret
     ; Instrução desconhecida - pular
     jmp .execute_inst
 
@@ -120,7 +105,7 @@ get_reg_size:
     ret
 
 ; Implementações das instruções
-.load:; Variantes: reg-reg; reg-imm; reg-[imm]; reg-[reg]
+.load:; Variantes: reg-reg; reg-const; reg-[const]; reg-[reg]
     ; LOAD dst, src
     ; Próximo byte: bits 7-4 = dst, bits 3-0 = src
     mov eax, [edi + 0x0E]      ; PC atual
