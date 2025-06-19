@@ -83,12 +83,21 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | JNC       | 1               | [Opcode]                                                                      |
 | HALT      | 1               | [Opcode]                                                                      |
 
+---
+
 ## 🔧 Tipos de operação
 
 Para a instrução LOAD, há um byte que indica o tipo de operação que será aplicada. As operações podem ter os seguintes valores:
 - 0x00: caso o byte para registrador/valor origem seja correspondente a um registrador
 - 0x01: caso o byte para registrador/valor origem seja correspondente a uma constante
 - 0x02: caso o byte para registrador/valor origem seja correspondente a um valor na memoria referenciado por um registrador
+
+---
+
+## 🔍 Observações
+
+- Será utilizada a ordem de bytes big-endian
+- Será simulada uma memória de 65536 bytes
 
 ---
 
