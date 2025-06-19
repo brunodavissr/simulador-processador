@@ -35,27 +35,27 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | R323        | 32 bits   | 0x0B   | Uso genérico                            |
 | R1280       | 128 bits  | 0x0C   | Uso genérico                            |
 | R1281       | 128 bits  | 0x0D   | Uso genérico                            |
-| DESV        | 32 bits   | 0x0F   | Guarda endereço para desvio             |
+| DESV        | 32 bits   | 0x0E   | Guarda endereço para desvio             |
 
 ---
 
 ## 🧾 Instruções
 
-| Instrução  | Descrição                           | Opcode | Exemplo                               |
-|------------|-------------------------------------|--------|---------------------------------------|
-| LOAD       | Carrega valor no registrador        | 0x00   | `LOAD R160, R161`, `LOAD R160, 10`, `LOAD R160, [10]`, `LOAD R160, [R161]` |
-| STORE      | Armazena valor na memória principal | 0x01   | `STORE [R160], R161`, `STORE [10], 5` |
-| ADD        | Soma dois registradores             | 0x02   | `ADD R160, R161`                      |
-| SUB        | Subtrai dois registradores          | 0x03   | `SUB R160, R161`                      |
-| AND        | Realiza operação lógica AND         | 0x04   | `AND R160, R161`                      |
-| OR         | Realiza operação lógica OR          | 0x05   | `OR R160, R161`                       |
-| XOR        | Realiza operação lógica XOR         | 0x06   | `XOR R160, R161`                      |
-| NOT        | Inverte bits do registrador         | 0x07   | `NOT R160`                            |
-| JMP        | Salta incondicionalmente            | 0x08   | `JMP`                                 |
-| JZ         | Salta se Z = 1                      | 0x09   | `JZ`                                  |
-| JNZ        | Salta se Z = 0                      | 0x0A   | `JNZ`                                 |
-| JL         | Salta se N ≠ O                      | 0x0B   | `JL`                                  |
-| JG         | Salta se Z = 0 e N = O              | 0x0C   | `JG`                                  |
-| JC         | Salta se C = 1                      | 0x0D   | `JC`                                  |
-| JNC        | Salta se C = 0                      | 0x0E   | `JNC`                                 |
-| HALT       | Encerra execução                    | 0x0F   | `HALT`                                |
+| Instrução  | Descrição                           | Opcode | Exemplo                                                 |
+|------------|-------------------------------------|--------|---------------------------------------------------------|
+| LOAD       | Carrega valor no registrador        | 0x00   | `LOAD R160, R161`, `LOAD R160, 10`, `LOAD R160, [R161]` |
+| STORE      | Armazena valor na memória principal | 0x01   | `STORE [R160], R161`                                    |
+| ADD        | Soma dois registradores             | 0x02   | `ADD R160, R161`                                        |
+| SUB        | Subtrai dois registradores          | 0x03   | `SUB R160, R161`                                        |
+| AND        | Realiza operação lógica AND         | 0x04   | `AND R160, R161`                                        |
+| OR         | Realiza operação lógica OR          | 0x05   | `OR R160, R161`                                         |
+| XOR        | Realiza operação lógica XOR         | 0x06   | `XOR R160, R161`                                        |
+| NOT        | Inverte bits do registrador         | 0x07   | `NOT R160`                                              |
+| JMP        | Salta incondicionalmente            | 0x08   | `JMP`                                                   |
+| JZ         | Salta se Z = 1                      | 0x09   | `JZ`                                                    |
+| JNZ        | Salta se Z = 0                      | 0x0A   | `JNZ`                                                   |
+| JL         | Salta se N ≠ O                      | 0x0B   | `JL`                                                    |
+| JG         | Salta se Z = 0 e N = O              | 0x0C   | `JG`                                                    |
+| JC         | Salta se C = 1                      | 0x0D   | `JC`                                                    |
+| JNC        | Salta se C = 0                      | 0x0E   | `JNC`                                                   |
+| HALT       | Encerra execução                    | 0x0F   | `HALT`                                                  |
