@@ -1,409 +1,218 @@
-section .bss
-    registradores_8 resb 4
-    registradores_16 resw 4
-    registradores_32 resd 5
-    registradores_128 resq 2
-
 section .data
+    global registradores_8
+    registradores_8: times 4 db 0
 
+    global registradores_16
+    registradores_16: times 4 dw 0
+
+    global registradores_32
+    registradores_32: times 5 dd 0
+
+    global registradores_128
+    registradores_128: times 4 dq 0
+
+    ; Adicionar mensagem para retorno (Sucesso, operação inexistente, instrução invalida, registradores de tamanhos diferentes)
+
+    fmt: db "%d", 10, 0
 
 section .text
-global processador
-
-
-; Layout dos registradores na memória:
-; 0x00-0x03: R80-R83 (8-bit)
-; 0x04-0x07: R160-R163 (16-bit)
-; 0x08-0x0B: R320-R323 (32-bit)
-; 0x0C-0x0D: R1280-R1281 (128-bit)
-; 0x0E: Registrador DESV (32-bit)
+    global processador
+    extern memoria, printf
 
 processador:
-    ; Obter parâmetros
-    movzx ebx, byte [rdi]
+    push rbp
+    mov rbp, rsp
 
-    ; Loop principal de execução
-.execute_inst:
-    
-    ; Decodificar e executar instrução
-    cmp ebx, 0x0F
-    je .halt 
-    cmp ebx, 0x00
-    je .load
-    cmp ebx, 0x01
-    je .store
-    cmp ebx, 0x02
-    je .add
-    cmp ebx, 0x03
-    je .sub
-    cmp ebx, 0x04
-    je .and
-    cmp ebx, 0x05
-    je .or
-    cmp ebx, 0x06
-    je .xor
-    cmp ebx, 0x07
-    je .not
-    cmp ebx, 0x08
-    je .jmp
-    cmp ebx, 0x09
-    je .jz
-    cmp ebx, 0x0A
-    je .jnz
-    cmp ebx, 0x0B
-    je .jl
-    cmp ebx, 0x0C
-    je .jg
-    cmp ebx, 0x0D
-    je .jc
-    cmp ebx, 0x0E
-    je .jnc
-    
-    ;error
-    ret
-    ; Instrução desconhecida - pular
-    jmp .execute_inst
+    mov rsi, memoria
 
+executar_instrucoes:
+    mov al, byte [rsi]
 
-; Função auxiliar para obter o offset e tamanho do registrador
-; Entrada: reg_idx em AL
-; Saída: EBX = offset, ECX = tamanho (em bytes)
-get_reg_size:
-    movzx ebx, al
-    cmp al, 0x04
-    jb .is_8bit
-    cmp al, 0x08
-    jb .is_16bit
-    cmp al, 0x0C
-    jb .is_32bit
-    cmp al, 0x0E
-    jb .is_128bit
-    ; inválido
-    xor ebx, ebx
-    xor ecx, ecx
-    ret
-.is_8bit:
-    mov ecx, 1
-    ret
-.is_16bit:
-    sub ebx, 0x04
-    shl ebx, 1      ; 2 bytes por registrador
-    add ebx, 0x04
-    mov ecx, 2
-    ret
-.is_32bit:
-    sub ebx, 0x08
-    shl ebx, 2      ; 4 bytes por registrador
-    add ebx, 0x08
-    mov ecx, 4
-    ret
-.is_128bit:
-    sub ebx, 0x0C
-    shl ebx, 4      ; 16 bytes por registrador
-    add ebx, 0x0C
-    mov ecx, 16
-    ret
+    ; Imprimindo apenas para debug
+    push rsi
+    push rax
+    mov rsi, rax
+    mov rdi, fmt
+    xor rax, rax
+    call printf
 
-; Implementações das instruções
-.load:; Variantes: reg-reg; reg-const; reg-[const]; reg-[reg]
-    ; LOAD dst, src
-    ; Próximo byte: bits 7-4 = dst, bits 3-0 = src
-    mov eax, [edi + 0x0E]      ; PC atual
-    movzx ebx, byte [esi + eax]
-    inc eax
-    mov [edi + 0x0E], eax      ; Atualiza PC
+    pop rax
+    pop rsi
 
-    mov edx, ebx
-    shr ebx, 4                 ; dst = bits 7-4
-    and edx, 0x0F              ; src = bits 3-0
+    cmp al, 0x0F ; HALT
+    je fim
 
-    ; Próximo byte: modo de endereçamento
-    mov eax, [edi + 0x0E]
-    movzx eax, byte [esi + eax]
-    inc dword [edi + 0x0E] ; Incrementa PC
+    cmp al, 0x00 ; LOAD
+    je load_
 
-    ; Modo 0: src = reg
-    cmp al, 0x00
-    je .load_reg
-    ; Modo 1: src = constante
-    cmp al, 0x01
-    je .load_const
-    ; Modo 2: src = memoria direta ([constante])
-    cmp al, 0x02
-    je .load_memdir
-    ; Modo 3: src = memoria indereta ([reg])
-    cmp al, 0x03 
-    je .load_memind
+    cmp al, 0x01 ; STORE
+    je store_
 
-    jmp .execute_inst
-    
-.load_reg:
-    ; dst <- src_reg
-    ; Usamos ebp para offset_dst, esp para offset_src, edx para tamanhos
-    mov al, bl
-    call get_reg_size
-    mov ebp, ebx        ; ebp = offset_dst
-    mov eax, ecx        ; eax = size_dst
+    cmp al, 0x02 ; ADD
+    je add_
 
-    mov al, dl
-    call get_reg_size
-    mov esp, ebx        ; esp = offset_src
-    mov edx, ecx        ; edx = size_src
+    cmp al, 0x03 ; SUB
+    je sub_
 
-    ; Determina menor tamanho
-    cmp eax, edx
-    cmovb edx, eax      ; edx = min(size_dst, size_src)
+    cmp al, 0x04 ; AND
+    je and_
 
-    ; Configura cópia
-    lea esi, [edi + esp]  ; fonte
-    lea edi, [edi + ebp]  ; destino
-    mov ecx, edx          ; contador
-    rep movsb
+    cmp al, 0x05 ; OR
+    je or_
 
-    ; Restaura edi (importante!)
-    mov esi, [ebp+4]     ; recupera ponteiro de memória
-    mov edi, [ebp+8]     ; recupera ponteiro de registradores
-    jmp .execute_inst
+    cmp al, 0x06 ; XOR
+    je xor_
 
-.load_const:
-    ; dst <- constante
-    mov al, bl
-    call get_reg_size
-    mov ebp, ebx        ; ebp = offset_dst
-    mov edx, ecx        ; edx = size
+    cmp al, 0x07 ; NOT
+    je not_
 
-    ; Copia da memória para o registrador
-    mov eax, [edi + 0x0E]
-    lea esi, [esi + eax]  ; fonte
-    lea edi, [edi + ebp]  ; destino
-    mov ecx, edx
-    rep movsb
+    cmp al, 0x08 ; JMP
+    je jmp_
 
-    ; Atualiza PC e restaura edi
-    add [edi + 0x0E], edx
-    mov esi, [ebp+4]      ; restaura ponteiro de memória
-    mov edi, [ebp+8]      ; restaura ponteiro de registradores
-    jmp .execute_inst
+    cmp al, 0x09 ; JZ
+    je jz_
 
-.load_memdir:
-    mov al, bl
-    call get_reg_size
-    mov ebp, ebx        ; ebp = offset_dst
-    mov edx, ecx        ; edx = size
+    cmp al, 0x0A ; JNZ
+    je jnz_
 
-    ; Lê endereço da memória
-    mov eax, [edi + 0x0E]
-    mov ebx, [esi + eax]
-    add eax, 4
-    mov [edi + 0x0E], eax
+    cmp al, 0x0B ; JL
+    je jl_
 
-    ; Copia da memória para o registrador
-    lea esi, [esi + ebx]  ; fonte
-    lea edi, [edi + ebp]  ; destino
-    mov ecx, edx
-    rep movsb
+    cmp al, 0x0C ; JG
+    je jg_
 
-    mov esi, [ebp+4]      ; restaura ponteiro de memória
-    mov edi, [ebp+8]      ; restaura ponteiro de registradores
+    cmp al, 0x0D ; JC
+    je jc_
 
-    jmp .execute_inst
+    cmp al, 0x0E ; JNC
+    je jnc_
 
-.load_memind:
-    ; dst <- [src_reg]
-    ; Usando:
-    ; ebx = código do registrador src (já está em bl)
-    ; edx = código do registrador dst (já está em bh)
-    
-    ; Endereço do registrador fonte
-    mov al, bl
-    call get_reg_size      ; ebx = offset_src, ecx = size_src
-    mov esp, ebx          ; esp = offset do registrador fonte
-    
-    ; Lê o endereço contido no registrador fonte
-    mov eax, [edi + esp]  ; eax = endereço de memória
-    
-    ; Agora obtemos informações do registrador destino
-    mov al, bh
-    call get_reg_size      ; ebx = offset_dst, ecx = size_dst
-    mov ebp, ebx          ; ebp = offset do registrador destino
-    mov edx, ecx          ; edx = tamanho do destino
-    
-    ; Configura a cópia da memória para o registrador
-    lea esi, [esi + eax]  ; fonte na memória
-    lea edi, [edi + ebp]  ; destino no registrador
-    mov ecx, edx          ; ecx = bytes a copiar
-    rep movsb             ; executa a cópia
-    
-    ; Restaura registradores essenciais
-    mov esi, [ebp+4]      ; restaura ponteiro de memória
-    mov edi, [ebp+8]      ; restaura ponteiro de registradores
+    jmp erro
 
-    jmp .execute_inst
+load_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 4
+    jmp executar_instrucoes
 
-.store:
-    ; STORE dst, src
-    ; Próximo byte: bits 7-4 = dst (memória), bits 3-0 = src (registrador)
-    mov eax, [edi + 0x0E]      ; PC atual
-    movzx ebx, byte [esi + eax] ; Byte 1: dst_mode (4 bits) | src_reg (4 bits)
-    inc eax
-    mov [edi + 0x0E], eax      ; Atualiza PC
+store_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 3
+    jmp executar_instrucoes
 
-    mov edx, ebx               ; Salva byte completo
-    shr ebx, 4                 ; dst_mode = bits 7-4
-    and edx, 0x0F              ; src_reg = bits 3-0
+add_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 3
+    jmp executar_instrucoes
 
-    ; Lê modo de endereçamento
-    mov eax, [edi + 0x0E]
-    movzx eax, byte [esi + eax]
-    inc dword [edi + 0x0E]
-    
-    cmp al, 0x00
-    je .store_memdir
-    cmp al, 0x01
-    je .store_memind
+sub_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 3
+    jmp executar_instrucoes
 
-    jmp .execute_inst
+and_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 3
+    jmp executar_instrucoes
 
-.store_memdir:
-    ; [imediato] <- src_reg
-    ; Obtém informações do registrador fonte
-    mov al, dl
-    call get_reg_size      ; ebx = offset_src, ecx = size_src
-    mov esp, ebx          ; esp = offset do registrador fonte
-    mov edx, ecx          ; edx = tamanho dos dados
+or_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 3
+    jmp executar_instrucoes
 
-    ; Lê endereço de destino da memória
-    mov eax, [edi + 0x0E]
-    mov ebx, [esi + eax]   ; ebx = endereço de destino
-    add eax, 4
-    mov [edi + 0x0E], eax  ; Atualiza PC
+xor_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 3
+    jmp executar_instrucoes
 
-    ; Configura a cópia do registrador para a memória
-    lea esi, [edi + esp]  ; esi = dados fonte (do registrador)
-    lea edi, [esi + ebx]  ; edi = destino na memória
-    mov ecx, edx          ; ecx = bytes a copiar
-    rep movsb             ; executa a cópia
+not_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 2
+    jmp executar_instrucoes
 
-    ; Restaura registradores essenciais
-    mov esi, [ebp+4]      ; restaura ponteiro de memória
-    mov edi, [ebp+8]      ; restaura ponteiro de registradores
+jmp_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 1
+    jmp executar_instrucoes
 
-    jmp .execute_inst
+jz_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 1
+    jmp executar_instrucoes
 
-.store_memind:
-    ; [dst_reg] <- src_reg
-    ; Obtém informações do registrador destino (que contém o endereço)
-    mov al, bl
-    call get_reg_size      ; ebx = offset_dst, ecx = size_dst
-    mov ebp, ebx          ; ebp = offset do registrador destino
-    
-    ; Lê o endereço de destino do registrador
-    mov eax, [edi + ebp]  ; eax = endereço de memória
-    
-    ; Obtém informações do registrador fonte
-    mov al, dl
-    call get_reg_size      ; ebx = offset_src, ecx = size_src
-    mov esp, ebx          ; esp = offset do registrador fonte
-    mov edx, ecx          ; edx = tamanho dos dados
+jnz_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 1
+    jmp executar_instrucoes
 
-    ; Configura a cópia do registrador para a memória
-    lea esi, [edi + esp]  ; esi = dados fonte (do registrador)
-    lea edi, [esi + eax]  ; edi = destino na memória
-    mov ecx, edx          ; ecx = bytes a copiar
-    rep movsb             ; executa a cópia
+jl_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 1
+    jmp executar_instrucoes
 
-    ; Restaura registradores essenciais
-    mov esi, [ebp+4]      ; restaura ponteiro de memória
-    mov edi, [ebp+8]      ; restaura ponteiro de registradores
+jg_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 1
+    jmp executar_instrucoes
 
-    jmp .execute_inst
+jc_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 1
+    jmp executar_instrucoes
 
-.add:
-    ; Obter operandos (próximo byte: registradores fonte e destino)
-    movzx ebx, byte [esi + eax]
-    inc eax
-    mov [edi + 0x0F], eax  ; Atualizar PC
-    
-    ; Extrair registradores fonte e destino (4 bits cada)
-    mov edx, ebx
-    shr edx, 4          ; registrador fonte
-    and ebx, 0x0F       ; registrador destino
-    
-    ; Determinar tamanhos dos registradores e realizar adição
-    jmp .execute_inst
+jnc_:
+    ; Verifica erros
+    ; Se não houver erros, executa lógica da instrução
+    ; Atualiza registradores
+    ; Atualiza rsi de acordo com o tamanho da instrução:
+    add rsi, 1
+    jmp executar_instrucoes
 
-.sub:
-    ; Similar a ADD
-    jmp .execute_inst
+erro:
+    ; armazena mensagem correspondente de erro para retorná-la ao código C
+    jmp fim
 
-.and:
-    ; Operação lógica AND
-    jmp .execute_inst
-
-.or:
-    ; Operação lógica OR
-    jmp .execute_inst
-
-.xor:
-    ; Operação lógica XOR
-    jmp .execute_inst
-
-.not:
-    ; Operação de inversão de bits (NOT)
-    jmp .execute_inst
-
-.jmp:
-    ; Salto incondicional
-    mov eax, [esi + eax]
-    mov [edi + 0x0F], eax
-    jmp .execute_inst
-
-.jz:
-    ; Saltar se flag Z = 1
-    add dword [edi + 0x0F], 4  ; Pular endereço 
-    jmp .execute_inst
-
-.jnz:
-    ; Saltar se flag Z = 0
-    add dword [edi + 0x0F], 4  ; Pular endereço 
-    jmp .execute_inst
-
-.jl:
-    ; Saltar se N ≠ O
-    add dword [edi + 0x0F], 4  ; Pular endereço 
-    jmp .execute_inst
-
-.jg:
-    ; Saltar se Z=0 e N=O
-    add dword [edi + 0x0F], 4
-    jmp .execute_inst
-
-.jc:
-    ; Saltar se flag C = 1
-    add dword [edi + 0x0F], 4
-    jmp .execute_inst
-
-.jnc:
-    ; Saltar se flag C = 0
-    add dword [edi + 0x0F], 4
-    jmp .execute_inst
-
-.do_jump:
-    ; Manipulação comum de saltos
-    mov eax, [edi + 0x0F]
-    mov eax, [esi + eax]
-    mov [edi + 0x0F], eax
-    jmp .execute_inst
-
-.halt:
-    ; Finalizar execução
-    jmp .end_exe
-
-.end_exe:
-    ; Imprimir valores dos registradores
-    call print_registers
-    ret
-
-print_registers:
-    ; Implementar impressão de registradores
+fim:
+    pop rbp
     ret
