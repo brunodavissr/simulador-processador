@@ -12,7 +12,7 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 - Simular registradores (8, 16, 32 e 128 bits)
 - Simular memória principal (dados e instruções)
 - Suportar instruções aritméticas, lógicas, de controle de fluxo e de movimentação de dados
-- Flags de condição: Carry (C), Overflow (O), Negativo (N), Zero (Z)
+- Utilizar flags para controlar saltos: Carry (C), Overflow (O), Negativo (N), Zero (Z)
 - Saída deverá conter o valor de cada um dos registradores após a execução das instruções
 
 ---
