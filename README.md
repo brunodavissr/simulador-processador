@@ -33,9 +33,9 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | R321        | 32 bits   | 0x09   | Uso genérico                            |
 | R322        | 32 bits   | 0x0A   | Uso genérico                            |
 | R323        | 32 bits   | 0x0B   | Uso genérico                            |
-| R1280       | 128 bits  | 0x0C   | Uso genérico                            |
-| R1281       | 128 bits  | 0x0D   | Uso genérico                            |
-| DESV        | 32 bits   | 0x0E   | Guarda endereço para desvio             |
+| DESV        | 32 bits   | 0x0C   | Guarda endereço para desvio             |
+| R1280       | 128 bits  | 0x0D   | Uso genérico                            |
+| R1281       | 128 bits  | 0x0E   | Uso genérico                            |
 
 ---
 
