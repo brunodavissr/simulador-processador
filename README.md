@@ -59,3 +59,9 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | JC         | Salta se C = 1                      | 0x0D   | `JC`                                                    |
 | JNC        | Salta se C = 0                      | 0x0E   | `JNC`                                                   |
 | HALT       | Encerra execução                    | 0x0F   | `HALT`                                                  |
+
+---
+
+## 🔀 Fluxograma
+
+![Fluxograma do simulador](fluxograma.png)
