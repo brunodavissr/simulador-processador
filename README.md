@@ -62,6 +62,36 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 
 ---
 
+## 🔟 Código de máquina
+
+| Instrução | Tamanho (bytes) | Estrutura da instrução                                                        |
+|-----------|-----------------|-------------------------------------------------------------------------------|
+| LOAD      | 4               | [Opcode] [Registrador destino] [Tipo de operação] [Registrador/valor origem]  |
+| STORE     | 3               | [Opcode] [Registrador endereço] [Registrador origem]                          |
+| ADD       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
+| SUB       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
+| AND       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
+| OR        | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
+| XOR       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
+| NOT       | 2               | [Opcode] [Registrador]                                                        |
+| JMP       | 1               | [Opcode]                                                                      |
+| JZ        | 1               | [Opcode]                                                                      |
+| JNZ       | 1               | [Opcode]                                                                      |
+| JL        | 1               | [Opcode]                                                                      |
+| JG        | 1               | [Opcode]                                                                      |
+| JC        | 1               | [Opcode]                                                                      |
+| JNC       | 1               | [Opcode]                                                                      |
+| HALT      | 1               | [Opcode]                                                                      |
+
+## 🔧 Tipos de operação
+
+Para a instrução LOAD, há um byte que indica o tipo de operação que será aplicada. As operações podem ter os seguintes valores:
+- 0x00: caso o byte para registrador/valor origem seja correspondente a um registrador
+- 0x01: caso o byte para registrador/valor origem seja correspondente a uma constante
+- 0x02: caso o byte para registrador/valor origem seja correspondente a um valor na memoria referenciado por um registrador
+
+---
+
 ## 🔀 Fluxograma
 
 ![Fluxograma do simulador](fluxograma.png)
