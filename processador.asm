@@ -1,15 +1,15 @@
 section .data
-    global registradores_8
-    registradores_8: times 4 db 0
+    global regs_8
+    regs_8: times 4 db 0
 
-    global registradores_16
-    registradores_16: times 4 dw 0
+    global regs_16
+    regs_16: times 4 dw 0
 
-    global registradores_32
-    registradores_32: times 5 dd 0
+    global regs_32
+    regs_32: times 5 dd 0
 
-    global registradores_128
-    registradores_128: times 4 dq 0
+    global regs_128
+    regs_128: times 4 dq 0
 
     ; Adicionar mensagem para retorno (Sucesso, operação inexistente, instrução invalida, registradores de tamanhos diferentes)
 
@@ -145,13 +145,67 @@ xor_:
     add rsi, 3
     jmp executar_instrucoes
 
+; ---------------------------------------------------------------
+
 not_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    mov al, byte [rsi + 1]
+
+    cmp al, 0x04
+    jl not_regs_8
+
+    cmp al, 0x08
+    jl not_regs_16
+
+    cmp al, 0x0D
+    jl not_regs_32
+
+    cmp al, 0x0F
+    jl not_regs_128
+
+    jmp erro
+
+not_regs_8:
+    mov rbx, regs_8
+    add rbx, rax
+    mov ah, byte [rbx]
+    not ah
+    mov byte [rbx], ah
+
     add rsi, 2
     jmp executar_instrucoes
+
+not_regs_16:
+    mov rbx, regs_16
+    sub al, 0x04
+    shl al, 1
+
+    add rbx, rax
+    mov ax, word [rbx]
+    not ax
+    mov word [rbx], ax
+
+    add rsi, 2
+    jmp executar_instrucoes
+
+not_regs_32:
+    mov rbx, regs_32
+    sub al, 0x08
+    shl al, 2
+
+    add rbx, rax
+    mov eax, dword [rbx]
+    not eax
+    mov dword [rbx], eax
+
+    add rsi, 2
+    jmp executar_instrucoes
+
+not_regs_128:
+    ; Lógica aqui
+    add rsi, 2
+    jmp executar_instrucoes
+
+; -------------------------------------------------------------
 
 jmp_:
     ; Verifica erros

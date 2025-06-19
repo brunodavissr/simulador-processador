@@ -5,10 +5,10 @@
 
 extern void processador();
 
-extern uint8_t registradores_8[4];
-extern uint16_t registradores_16[4];
-extern uint32_t registradores_32[5];
-extern uint64_t registradores_128[4];
+extern uint8_t regs_8[4];
+extern uint16_t regs_16[4];
+extern uint32_t regs_32[5];
+extern uint64_t regs_128[4];
 
 uint8_t memoria[65536];
 
@@ -51,21 +51,21 @@ int main() {
     processador();
 
     printf("Valor dos registradores:\n");
-    printf("R80.: %i\n", registradores_8[0]);
-    printf("R81.: %i\n", registradores_8[1]);
-    printf("R82.: %i\n", registradores_8[2]);
-    printf("R83.: %i\n", registradores_8[3]);
-    printf("R160: %i\n", registradores_16[0]);
-    printf("R161: %i\n", registradores_16[1]);
-    printf("R162: %i\n", registradores_16[2]);
-    printf("R163: %i\n", registradores_16[3]);
-    printf("R320: %i\n", registradores_32[0]);
-    printf("R321: %i\n", registradores_32[1]);
-    printf("R322: %i\n", registradores_32[2]);
-    printf("R323: %i\n", registradores_32[3]);
+    printf("R80.: %u\n", regs_8[0]);
+    printf("R81.: %u\n", regs_8[1]);
+    printf("R82.: %u\n", regs_8[2]);
+    printf("R83.: %u\n", regs_8[3]);
+    printf("R160: %u\n", regs_16[0]);
+    printf("R161: %u\n", regs_16[1]);
+    printf("R162: %u\n", regs_16[2]);
+    printf("R163: %u\n", regs_16[3]);
+    printf("R320: %u\n", regs_32[0]);
+    printf("R321: %u\n", regs_32[1]);
+    printf("R322: %u\n", regs_32[2]);
+    printf("R323: %u\n", regs_32[3]);
     //Impressão do primeiro registrador de 128 bits
     //Impressão do segundo registrador de 128 bits
-    printf("DESV: %i\n", registradores_32[4]);
+    printf("DESV: %u\n", regs_32[4]);
 
     return 0;
 }
