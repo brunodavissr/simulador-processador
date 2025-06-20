@@ -62,24 +62,26 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 
 ## 🔟 Código de máquina
 
-| Instrução | Tamanho (bytes) | Estrutura da instrução                                                        |
-|-----------|-----------------|-------------------------------------------------------------------------------|
-| LOAD      | 4               | [Opcode] [Registrador destino] [Tipo de operação] [Registrador/valor origem]  |
-| STORE     | 3               | [Opcode] [Registrador endereço] [Registrador origem]                          |
-| ADD       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
-| SUB       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
-| AND       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
-| OR        | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
-| XOR       | 3               | [Opcode] [Registrador destino] [Registrador origem]                           |
-| NOT       | 2               | [Opcode] [Registrador]                                                        |
-| JMP       | 1               | [Opcode]                                                                      |
-| JZ        | 1               | [Opcode]                                                                      |
-| JNZ       | 1               | [Opcode]                                                                      |
-| JL        | 1               | [Opcode]                                                                      |
-| JG        | 1               | [Opcode]                                                                      |
-| JC        | 1               | [Opcode]                                                                      |
-| JNC       | 1               | [Opcode]                                                                      |
-| HALT      | 1               | [Opcode]                                                                      |
+
+
+| Instrução | Tamanho | Estrutura da instrução                         |
+|-----------|---------|------------------------------------------------|
+| LOAD      | 4 bytes | [00] [RegDes] [TipoOp] [ValOrg]                |
+| STORE     | 3 bytes | [01] [RegEnd] [RegOrg]                         |
+| ADD       | 3 bytes | [02] [RegDes] [RegOrg]                         |
+| SUB       | 3 bytes | [03] [RegDes] [RegOrg]                         |
+| AND       | 3 bytes | [04] [RegDes] [RegOrg]                         |
+| OR        | 3 bytes | [05] [RegDes] [RegOrg]                         |
+| XOR       | 3 bytes | [06] [RegDes] [RegOrg]                         |
+| NOT       | 2 bytes | [07] [RegDes]                                  |
+| JMP       | 1 byte  | [08]                                           |
+| JZ        | 1 byte  | [09]                                           |
+| JNZ       | 1 byte  | [0A]                                           |
+| JL        | 1 byte  | [0B]                                           |
+| JG        | 1 byte  | [0C]                                           |
+| JC        | 1 byte  | [0D]                                           |
+| JNC       | 1 byte  | [0E]                                           |
+| HALT      | 1 byte  | [0F]                                           |
 
 ---
 
