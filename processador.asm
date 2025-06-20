@@ -8,12 +8,12 @@ section .data
     global regs_32
     regs_32: times 5 dd 0
 
-    global regs_128
-    regs_128: times 4 dq 0
+    status_sucesso: db "Sucesso!", 0
+    status_erro   : db "Erro: formatacao incorreta!"
 
-    ; Adicionar mensagem para retorno (Sucesso, operação inexistente, instrução invalida, registradores de tamanhos diferentes)
-
-    fmt: db "%d", 10, 0
+section .bss
+    global status
+    status: resq 1
 
 section .text
     global processador
@@ -25,22 +25,15 @@ processador:
 
     mov rsi, memoria
 
+; ------------------------------------------------------------
+;                        LOOP PRINCIPAL
+; ------------------------------------------------------------
+
 executar_instrucoes:
     mov al, byte [rsi]
 
-    ; Imprimindo apenas para debug
-    push rsi
-    push rax
-    mov rsi, rax
-    mov rdi, fmt
-    xor rax, rax
-    call printf
-
-    pop rax
-    pop rsi
-
     cmp al, 0x0F ; HALT
-    je fim
+    je halt_
 
     cmp al, 0x00 ; LOAD
     je load_
@@ -49,19 +42,19 @@ executar_instrucoes:
     je store_
 
     cmp al, 0x02 ; ADD
-    je add_
+    je add_sub_and_or_xor
 
     cmp al, 0x03 ; SUB
-    je sub_
+    je add_sub_and_or_xor
 
     cmp al, 0x04 ; AND
-    je and_
+    je add_sub_and_or_xor
 
     cmp al, 0x05 ; OR
-    je or_
+    je add_sub_and_or_xor
 
     cmp al, 0x06 ; XOR
-    je xor_
+    je add_sub_and_or_xor
 
     cmp al, 0x07 ; NOT
     je not_
@@ -89,13 +82,150 @@ executar_instrucoes:
 
     jmp erro
 
+; ------------------------------------------------------------
+;                           LOAD
+; ------------------------------------------------------------
+
 load_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    mov al, byte [rsi + 2]
+
+    cmp al, 0x00
+    je load_registrador
+
+    cmp al, 0x01
+    je load_constante
+
+    cmp al, 0x02
+    je load_memoria
+
+    jmp erro
+
+load_registrador:
+    mov al, byte [rsi + 1]
+    mov bl, byte [rsi + 3]
+
+    cmp al, 0x04
+    jl load_registrador_8
+
+    cmp al, 0x08
+    jl load_registrador_16
+
+    cmp al, 0x0D
+    jl load_registrador_32
+
+    jmp erro
+
+load_registrador_8:
+    cmp bl, 0x03
+    jg erro
+
+    ; Endereço Destino
+    mov rcx, regs_8
+    add rcx, rax
+
+    ; Valor origem
+    mov rdx, regs_8
+    add rdx, rbx
+    mov dl, byte [rdx]
+
+    mov byte [rcx], dl
+
+    jmp fim_load
+
+load_registrador_16:
+    cmp bl, 0x07
+    jg erro
+    cmp bl, 0x04
+    jl erro
+
+    ; Endereço Destino
+    mov rcx, regs_16
+    sub rax, 0x04
+    shl rax, 1
+    add rcx, rax
+
+    ; Valor origem
+    mov rdx, regs_16
+    sub rbx, 0x04
+    shl rbx, 1
+    add rdx, rbx
+    mov dx, word [rdx]
+
+    mov word [rcx], dx
+
+    jmp fim_load
+
+load_registrador_32:
+    cmp bl, 0x0C
+    jg erro
+    cmp bl, 0x08
+    jl erro
+
+    ; Endereço Destino
+    mov rcx, regs_32
+    sub rax, 0x08
+    shl rax, 2
+    add rcx, rax
+
+    ; Valor origem
+    mov rdx, regs_32
+    sub rbx, 0x08
+    shl rbx, 2
+    add rdx, rbx
+    mov edx, dword [rdx]
+
+    mov dword [rcx], edx
+
+    jmp fim_load
+
+load_constante:
+    mov al, byte [rsi + 1]
+    mov bl, byte [rsi + 3]
+
+    cmp al, 0x04
+    jl load_constante_8
+
+    cmp al, 0x08
+    jl load_constante_16
+
+    cmp al, 0x0D
+    jl load_constante_32
+
+    jmp erro
+
+load_constante_8:
+    mov rcx, regs_8
+    add rcx, rax
+    mov byte [rcx], bl
+    jmp fim_load
+
+load_constante_16:
+    mov rcx, regs_16
+    sub rax, 0x04
+    shl rax, 1
+    add rcx, rax
+    mov word [rcx], bx
+    jmp fim_load
+
+load_constante_32:
+    mov rcx, regs_32
+    sub rax, 0x08
+    shl rax, 2
+    add rcx, rax
+    mov dword [rcx], ebx
+    jmp fim_load
+
+load_memoria:
+    ; Lógica aqui
+    jmp fim_load
+
+fim_load:
     add rsi, 4
     jmp executar_instrucoes
+
+; ------------------------------------------------------------
+;                           STORE
+; ------------------------------------------------------------
 
 store_:
     ; Verifica erros
@@ -105,47 +235,210 @@ store_:
     add rsi, 3
     jmp executar_instrucoes
 
-add_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+; ------------------------------------------------------------
+;                      ADD/SUB/AND/OR/XOR
+; ------------------------------------------------------------
+
+add_sub_and_or_xor:
+    push rax
+    mov al, byte [rsi + 1]
+    mov bl, byte [rsi + 2]
+
+    cmp al, 0x04
+    jl add_sub_and_or_xor_8
+
+    cmp al, 0x08
+    jl add_sub_and_or_xor_16
+
+    cmp al, 0x0D
+    jl add_sub_and_or_xor_32
+
+    jmp erro
+
+add_sub_and_or_xor_8:
+    cmp bl, 0x03
+    jg erro
+
+    ; Endereço Destino
+    mov rcx, regs_8
+    add rcx, rax
+
+    ; Valor destino
+    mov dil, byte [rcx]
+
+    ; Valor origem
+    mov rdx, regs_8
+    add rdx, rbx
+    mov dl, byte [rdx]
+
+    pop rax
+    cmp al, 0x02
+    je add_8
+
+    cmp al, 0x03
+    je sub_8
+
+    cmp al, 0x04
+    je and_8
+
+    cmp al, 0x05
+    je or_8
+
+    jmp xor_8
+
+add_8:
+    add dil, dl
+    jmp finalizar_op_8
+
+sub_8:
+    sub dil, dl
+    jmp finalizar_op_8
+
+and_8:
+    and dil, dl
+    jmp finalizar_op_8
+
+or_8:
+    or dil, dl
+    jmp finalizar_op_8
+
+xor_8:
+    xor dil, dl
+    jmp finalizar_op_8
+
+finalizar_op_8:
+    mov byte [rcx], dil
+    jmp fim_add_sub_and_or_xor
+
+add_sub_and_or_xor_16:
+    cmp bl, 0x07
+    jg erro
+    cmp bl, 0x04
+    jl erro
+
+    ; Endereço Destino
+    mov rcx, regs_16
+    sub rax, 0x04
+    shl rax, 1
+    add rcx, rax
+
+    ; Valor destino
+    mov di, word [rcx]
+
+    ; Valor origem
+    mov rdx, regs_16
+    sub rbx, 0x04
+    shl rbx, 1
+    add rdx, rbx
+    mov dx, word [rdx]
+
+    pop rax
+    cmp al, 0x02
+    je add_16
+
+    cmp al, 0x03
+    je sub_16
+
+    cmp al, 0x04
+    je and_16
+
+    cmp al, 0x05
+    je or_16
+
+    jmp xor_16
+
+add_16:
+    add di, dx
+    jmp finalizar_op_16
+
+sub_16:
+    sub di, dx
+    jmp finalizar_op_16
+
+and_16:
+    and di, dx
+    jmp finalizar_op_16
+
+or_16:
+    or di, dx
+    jmp finalizar_op_16
+
+xor_16:
+    xor di, dx
+    jmp finalizar_op_16
+
+finalizar_op_16:
+    mov word [rcx], di
+    jmp fim_add_sub_and_or_xor
+
+add_sub_and_or_xor_32:
+    cmp bl, 0x0C
+    jg erro
+    cmp bl, 0x08
+    jl erro
+
+    ; Endereço Destino
+    mov rcx, regs_32
+    sub rax, 0x08
+    shl rax, 2
+    add rcx, rax
+
+    ; Valor destino
+    mov edi, dword [rcx]
+
+    ; Valor origem
+    mov rdx, regs_32
+    sub rbx, 0x08
+    shl rbx, 2
+    add rdx, rbx
+    mov edx, dword [rdx]
+
+    pop rax
+    cmp al, 0x02
+    je add_32
+
+    cmp al, 0x03
+    je sub_32
+
+    cmp al, 0x04
+    je and_32
+
+    cmp al, 0x05
+    je or_32
+
+    jmp xor_32
+
+add_32:
+    add edi, edx
+    jmp finalizar_op_32
+
+sub_32:
+    sub edi, edx
+    jmp finalizar_op_32
+
+and_32:
+    and edi, edx
+    jmp finalizar_op_32
+
+or_32:
+    or edi, edx
+    jmp finalizar_op_32
+
+xor_32:
+    xor edi, edx
+    jmp finalizar_op_32
+
+finalizar_op_32:
+    mov dword [rcx], edi
+    jmp fim_add_sub_and_or_xor
+
+fim_add_sub_and_or_xor:
     add rsi, 3
     jmp executar_instrucoes
 
-sub_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
-    add rsi, 3
-    jmp executar_instrucoes
-
-and_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
-    add rsi, 3
-    jmp executar_instrucoes
-
-or_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
-    add rsi, 3
-    jmp executar_instrucoes
-
-xor_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
-    add rsi, 3
-    jmp executar_instrucoes
-
-; ---------------------------------------------------------------
+; ------------------------------------------------------------
+;                            NOT
+; ------------------------------------------------------------
 
 not_:
     mov al, byte [rsi + 1]
@@ -159,9 +452,6 @@ not_:
     cmp al, 0x0D
     jl not_regs_32
 
-    cmp al, 0x0F
-    jl not_regs_128
-
     jmp erro
 
 not_regs_8:
@@ -171,8 +461,7 @@ not_regs_8:
     not ah
     mov byte [rbx], ah
 
-    add rsi, 2
-    jmp executar_instrucoes
+    jmp fim_not
 
 not_regs_16:
     mov rbx, regs_16
@@ -184,8 +473,7 @@ not_regs_16:
     not ax
     mov word [rbx], ax
 
-    add rsi, 2
-    jmp executar_instrucoes
+    jmp fim_not
 
 not_regs_32:
     mov rbx, regs_32
@@ -197,23 +485,25 @@ not_regs_32:
     not eax
     mov dword [rbx], eax
 
+    jmp fim_not
+
+fim_not:
     add rsi, 2
     jmp executar_instrucoes
 
-not_regs_128:
-    ; Lógica aqui
-    add rsi, 2
-    jmp executar_instrucoes
-
-; -------------------------------------------------------------
+; ------------------------------------------------------------
+;                            JMP
+; ------------------------------------------------------------
 
 jmp_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
-    add rsi, 1
+    mov rsi, memoria
+    mov eax, dword [regs_32 + 16]
+    add rsi, rax
     jmp executar_instrucoes
+
+; ------------------------------------------------------------
+;                             JZ
+; ------------------------------------------------------------
 
 jz_:
     ; Verifica erros
@@ -223,6 +513,10 @@ jz_:
     add rsi, 1
     jmp executar_instrucoes
 
+; ------------------------------------------------------------
+;                            JNZ
+; ------------------------------------------------------------
+
 jnz_:
     ; Verifica erros
     ; Se não houver erros, executa lógica da instrução
@@ -230,6 +524,10 @@ jnz_:
     ; Atualiza rsi de acordo com o tamanho da instrução:
     add rsi, 1
     jmp executar_instrucoes
+
+; ------------------------------------------------------------
+;                            JL
+; ------------------------------------------------------------
 
 jl_:
     ; Verifica erros
@@ -239,6 +537,10 @@ jl_:
     add rsi, 1
     jmp executar_instrucoes
 
+; ------------------------------------------------------------
+;                            JG
+; ------------------------------------------------------------
+
 jg_:
     ; Verifica erros
     ; Se não houver erros, executa lógica da instrução
@@ -246,6 +548,10 @@ jg_:
     ; Atualiza rsi de acordo com o tamanho da instrução:
     add rsi, 1
     jmp executar_instrucoes
+
+; ------------------------------------------------------------
+;                            JC
+; ------------------------------------------------------------
 
 jc_:
     ; Verifica erros
@@ -255,6 +561,10 @@ jc_:
     add rsi, 1
     jmp executar_instrucoes
 
+; ------------------------------------------------------------
+;                            JNC
+; ------------------------------------------------------------
+
 jnc_:
     ; Verifica erros
     ; Se não houver erros, executa lógica da instrução
@@ -263,9 +573,25 @@ jnc_:
     add rsi, 1
     jmp executar_instrucoes
 
-erro:
-    ; armazena mensagem correspondente de erro para retorná-la ao código C
+; ------------------------------------------------------------
+;                            HALT
+; ------------------------------------------------------------
+
+halt_:
+    mov qword [status], status_sucesso
     jmp fim
+
+; ------------------------------------------------------------
+;                            ERRO
+; ------------------------------------------------------------
+
+erro:
+    mov qword [status], status_erro
+    jmp fim
+
+; ------------------------------------------------------------
+;                            FIM
+; ------------------------------------------------------------
 
 fim:
     pop rbp
