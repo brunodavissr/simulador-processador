@@ -9,7 +9,7 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 ## ⚙️ Funcionalidades
 
 - Entrada com arquivo de texto contendo as instruções em formato hexadecimal
-- Simular registradores (8, 16, 32 e 128 bits)
+- Simular registradores (8, 16 e 32 bits)
 - Simular memória principal (dados e instruções)
 - Suportar instruções aritméticas, lógicas, de controle de fluxo e de movimentação de dados
 - Utilizar flags para controlar saltos: Carry (C), Overflow (O), Negativo (N), Zero (Z)
@@ -33,9 +33,7 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | R321        | 32 bits   | 0x09   | Uso genérico                            |
 | R322        | 32 bits   | 0x0A   | Uso genérico                            |
 | R323        | 32 bits   | 0x0B   | Uso genérico                            |
-| DESV        | 32 bits   | 0x0C   | Guarda endereço para desvio             |
-| R1280       | 128 bits  | 0x0D   | Uso genérico                            |
-| R1281       | 128 bits  | 0x0E   | Uso genérico                            |
+| DESV        | 32 bits   | 0x0C   | Armazena endereço de desvio             |
 
 ---
 
