@@ -238,13 +238,145 @@ fim_load:
 ;                           STORE
 ; ------------------------------------------------------------
 
+;modo 1
 store_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
-    add rsi, 3
+    mov al, byte [rsi + 1]    ; RegEnd (registrador com endereço)
+    mov bl, byte [rsi + 2]    ; RegOrg (registrador com valor)
+    mov r8, memoria           ; Carrega endereço base da memória
+
+    ; Determinar tipo de registrador de origem (RegOrg)
+    cmp bl, 0x04
+    jl store_8
+    cmp bl, 0x08
+    jl store_16
+    cmp bl, 0x0C
+    jl store_32
+    jmp erro                  ; Tamanho não suportado
+
+store_8:
+    ; Obter endereço de memória do registrador RegEnd
+    mov rcx, regs_32
+    sub al, 0x08              ; Ajusta índice para regs_32
+    shl al, 2                 ; Multiplica por 4 (tamanho de 32 bits)
+    mov edx, [rcx + rax]      ; edx = endereço de memória
+
+    ; Obter valor de 8 bits do registrador RegOrg
+    mov rcx, regs_8
+    mov cl, [rcx + rbx]       ; cl = valor (8 bits)
+
+    ; Armazenar na memória
+    mov [r8 + rdx], cl        ; Mem[edx] = cl
+    jmp fim_store
+
+store_16:
+    ; Obter endereço de memória do registrador RegEnd
+    mov rcx, regs_32
+    sub al, 0x08
+    shl al, 2
+    mov edx, [rcx + rax]      ; edx = endereço de memória
+
+    ; Obter valor de 16 bits do registrador RegOrg
+    mov rcx, regs_16
+    sub bl, 0x04              ; Ajusta índice para regs_16
+    shl bl, 1                 ; Multiplica por 2 (tamanho)
+    mov cx, [rcx + rbx]       ; cx = valor (16 bits)
+
+    ; Armazenar em big-endian
+    mov [r8 + rdx], ch        ; Byte alto
+    mov [r8 + rdx + 1], cl    ; Byte baixo
+    jmp fim_store
+
+store_32:
+    ; Obter endereço de memória do registrador RegEnd
+    mov rcx, regs_32
+    sub al, 0x08
+    shl al, 2
+    mov edx, [rcx + rax]      ; edx = endereço de memória
+
+    ; Obter valor de 32 bits do registrador RegOrg
+    mov rcx, regs_32
+    sub bl, 0x08              ; Ajusta índice para regs_32
+    shl bl, 2
+    mov ecx, [rcx + rbx]      ; ecx = valor (32 bits)
+
+    ; Armazenar em big-endian
+    bswap ecx                 ; Converte para big-endian
+    mov [r8 + rdx], ecx       ; Armazena os 4 bytes
+    jmp fim_store
+
+fim_store:
+    add rsi, 3                ; Avança para próxima instrução
     jmp executar_instrucoes
+
+;modo 2
+.store:
+    ; STORE dst, src
+    ; Próximo byte: bits 7-4 = dst (memória), bits 3-0 = src (registrador)
+    mov eax, [edi + 0x0E]      ; PC atual
+    movzx ebx, byte [esi + eax] ; Byte 1: dst_mode (4 bits) | src_reg (4 bits)
+    inc eax
+    mov [edi + 0x0E], eax      ; Atualiza PC
+
+    mov edx, ebx               ; Salva byte completo
+    shr ebx, 4                 ; dst_mode = bits 7-4
+    and edx, 0x0F              ; src_reg = bits 3-0
+
+    ; Lê modo de endereçamento
+    mov eax, [edi + 0x0E]
+    movzx eax, byte [esi + eax]
+    inc dword [edi + 0x0E]     ; Incrementa PC
+    
+    cmp al, 0x00
+    je .store_memoria_dir           ; Modo direto: [constante]
+    cmp al, 0x01
+    je .store_memoria_ind           ; Modo indireto: [registrador]
+    jmp .execute_inst
+
+.store_memdir:
+    ; [imediato] <- src_reg
+    ; Obtém offset e tamanho do registrador fonte
+    mov al, dl
+    call get_reg_size          ; EBX = offset_src, ECX = size_src
+    mov esp, ebx               ; ESP = offset do registrador fonte
+    mov edx, ecx               ; EDX = tamanho dos dados
+
+    ; Lê endereço de destino da memória (4 bytes)
+    mov eax, [edi + 0x0E]
+    mov ebx, [esi + eax]       ; EBX = endereço de destino
+    add eax, 4
+    mov [edi + 0x0E], eax      ; Atualiza PC
+
+    ; Copia dados do registrador para memória
+    lea esi_temp, [edi + esp]  ; ESI_temp = dados do registrador fonte
+    lea edi_temp, [esi + ebx]  ; EDI_temp = endereço de destino na memória
+    mov ecx, edx               ; ECX = bytes a copiar
+    rep movsb                  ; Executa cópia
+
+    jmp .execute_inst
+
+.store_memoria_ind:
+    ; [dst_reg] <- src_reg
+    ; Obtém offset e tamanho do registrador destino (contém endereço)
+    mov al, bl
+    call get_reg_size          ; EBX = offset_dst, ECX = size_dst
+    mov ebp, ebx               ; EBP = offset do registrador destino
+    
+    ; Lê endereço de destino do registrador
+    mov eax, [edi + ebp]       ; EAX = endereço de memória
+    
+    ; Obtém offset e tamanho do registrador fonte
+    mov al, dl
+    call get_reg_size          ; EBX = offset_src, ECX = size_src
+    mov esp, ebx               ; ESP = offset do registrador fonte
+    mov edx, ecx               ; EDX = tamanho dos dados
+
+    ; Copia dados do registrador para memória
+    lea esi_temp, [edi + esp]  ; ESI_temp = dados do registrador fonte
+    lea edi_temp, [esi + eax]  ; EDI_temp = endereço de destino na memória
+    mov ecx, edx               ; ECX = bytes a copiar
+    rep movsb                  ; Executa cópia
+
+    jmp .execute_inst
 
 ; ------------------------------------------------------------
 ;                      ADD/SUB/AND/OR/XOR
