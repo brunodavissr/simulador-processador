@@ -62,7 +62,11 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 
 ## 🔟 Código de máquina
 
-
+- RegDes (Registrador de destino): Opcode do registrador que armazenará o resultado da instrução
+- RegOrg (Registrador de origem): Opcode do registrador que será utilizado como operando da instrução
+- RegEnd (Registrador de endereço): Opcode do registrador que será utilizado para referenciar uma posição na memória
+- ValOrg (Valor de origem): Pode ser tanto um valor constante como o opcode de um registrador (podendo ser usado como valor direto ou para referênciar a memória)
+- TipoOp (Tipo de operação): Parâmetro usado na instrução LOAD. Utilizar 0x00 caso ValOrg seja o opcode de um registrador, 0x01 caso ValOrg seja uma constante ou 0x02 caso ValOrg seja o opcode de um registrador que referência a memória
 
 | Instrução | Tamanho | Estrutura da instrução                         |
 |-----------|---------|------------------------------------------------|
@@ -85,18 +89,10 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 
 ---
 
-## 🔧 Tipos de operação
-
-Para a instrução LOAD, há um byte que indica o tipo de operação que será aplicada. As operações podem ter os seguintes valores:
-- 0x00: caso o byte para registrador/valor origem seja correspondente a um registrador
-- 0x01: caso o byte para registrador/valor origem seja correspondente a uma constante
-- 0x02: caso o byte para registrador/valor origem seja correspondente a um valor na memoria referenciado por um registrador
-
----
-
 ## 🔍 Observações
 
-- Será utilizada a ordem de bytes big-endian
+- Essa é uma máquina de 32 bits, ou seja, só aceita registradores de 32 bits como referência a posições na memória
+- Será utilizada a ordem de bytes big-endian para o código de máquina
 - Será simulada uma memória de 65536 bytes
 
 ---
