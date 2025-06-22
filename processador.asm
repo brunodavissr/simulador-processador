@@ -8,6 +8,11 @@ section .data
     global regs_32
     regs_32: times 5 dd 0
 
+    flags: dd 0
+
+    fmt_rsi: db "OP: %d", 10, 0
+    fmt_flag: db "Flags: %d", 10, 0
+
     status_sucesso: db "Sucesso!", 0
     status_erro   : db "Erro: formatacao incorreta!"
 
@@ -30,6 +35,12 @@ processador:
 ; ------------------------------------------------------------
 
 executar_instrucoes:
+    xor rax, rax
+    xor rbx, rbx
+    xor rcx, rcx
+    xor rdx, rdx
+    xor rdi, rdi
+
     mov al, byte [rsi]
 
     cmp al, 0x0F ; HALT
@@ -288,10 +299,16 @@ add_sub_and_or_xor_8:
 
 add_8:
     add dil, dl
+    pushf
+    pop rax
+    mov dword [flags], eax
     jmp finalizar_op_8
 
 sub_8:
     sub dil, dl
+    pushf
+    pop rax
+    mov dword [flags], eax
     jmp finalizar_op_8
 
 and_8:
@@ -349,10 +366,16 @@ add_sub_and_or_xor_16:
 
 add_16:
     add di, dx
+    pushf
+    pop rax
+    mov dword [flags], eax
     jmp finalizar_op_16
 
 sub_16:
     sub di, dx
+    pushf
+    pop rax
+    mov dword [flags], eax
     jmp finalizar_op_16
 
 and_16:
@@ -410,10 +433,16 @@ add_sub_and_or_xor_32:
 
 add_32:
     add edi, edx
+    pushf
+    pop rax
+    mov dword [flags], eax
     jmp finalizar_op_32
 
 sub_32:
     sub edi, edx
+    pushf
+    pop rax
+    mov dword [flags], eax
     jmp finalizar_op_32
 
 and_32:
@@ -506,10 +535,11 @@ jmp_:
 ; ------------------------------------------------------------
 
 jz_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    ; Salta se ZF = 1
+    mov eax, dword [flags]
+    and eax, 0x40
+    jnz jmp_
+
     add rsi, 1
     jmp executar_instrucoes
 
@@ -518,10 +548,11 @@ jz_:
 ; ------------------------------------------------------------
 
 jnz_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    ; Salta se ZF = 0
+    mov eax, dword [flags]
+    and eax, 0x40
+    jz jmp_
+
     add rsi, 1
     jmp executar_instrucoes
 
@@ -530,10 +561,22 @@ jnz_:
 ; ------------------------------------------------------------
 
 jl_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    ; Salta se SF ≠ OF
+    xor rax, rax
+    xor rbx, rbx
+    mov eax, dword [flags]
+    mov ebx, eax
+
+    and eax, 0x80
+    and ebx, 0x800
+
+    shr eax, 7
+    shr ebx, 11
+
+    xor eax, ebx
+
+    jnz jmp_
+
     add rsi, 1
     jmp executar_instrucoes
 
@@ -542,10 +585,28 @@ jl_:
 ; ------------------------------------------------------------
 
 jg_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    ; Salta se ZF = 0 e SF = OF
+    mov eax, dword [flags]
+    mov ebx, eax
+    mov ecx, ebx
+
+    and eax, 0x40
+    shr eax, 6
+    not eax
+
+    and ebx, 0x80
+    shr ebx, 7
+
+    and ecx, 0x800
+    shr ecx, 11
+
+    xor ebx, ecx
+    xor ebx, 1
+
+    and eax, ebx
+
+    jnz jmp_
+
     add rsi, 1
     jmp executar_instrucoes
 
@@ -554,10 +615,11 @@ jg_:
 ; ------------------------------------------------------------
 
 jc_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    ; Salta se CF = 1
+    mov eax, dword [flags]
+    and eax, 0x01
+    jnz jmp_
+
     add rsi, 1
     jmp executar_instrucoes
 
@@ -566,10 +628,11 @@ jc_:
 ; ------------------------------------------------------------
 
 jnc_:
-    ; Verifica erros
-    ; Se não houver erros, executa lógica da instrução
-    ; Atualiza registradores
-    ; Atualiza rsi de acordo com o tamanho da instrução:
+    ; Salta se CF = 0
+    mov eax, dword [flags]
+    and eax, 0x01
+    jz jmp_
+
     add rsi, 1
     jmp executar_instrucoes
 
