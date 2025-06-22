@@ -41,8 +41,8 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 
 | Instrução  | Descrição                           | Opcode | Exemplo                                                 |
 |------------|-------------------------------------|--------|---------------------------------------------------------|
-| LOAD       | Carrega valor no registrador        | 0x00   | `LOAD R160, R161`, `LOAD R160, 10`, `LOAD R160, [R161]` |
-| STORE      | Armazena valor na memória principal | 0x01   | `STORE [R160], R161`                                    |
+| LOAD       | Carrega valor no registrador        | 0x00   | `LOAD R160, R161`, `LOAD R160, 10`, `LOAD R160, [R320]` |
+| STORE      | Armazena valor na memória principal | 0x01   | `STORE [R320], R161`                                    |
 | ADD        | Soma dois registradores             | 0x02   | `ADD R160, R161`                                        |
 | SUB        | Subtrai dois registradores          | 0x03   | `SUB R160, R161`                                        |
 | AND        | Realiza operação lógica AND         | 0x04   | `AND R160, R161`                                        |
