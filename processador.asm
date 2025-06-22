@@ -299,16 +299,10 @@ add_sub_and_or_xor_8:
 
 add_8:
     add dil, dl
-    pushf
-    pop rax
-    mov dword [flags], eax
     jmp finalizar_op_8
 
 sub_8:
     sub dil, dl
-    pushf
-    pop rax
-    mov dword [flags], eax
     jmp finalizar_op_8
 
 and_8:
@@ -366,16 +360,10 @@ add_sub_and_or_xor_16:
 
 add_16:
     add di, dx
-    pushf
-    pop rax
-    mov dword [flags], eax
     jmp finalizar_op_16
 
 sub_16:
     sub di, dx
-    pushf
-    pop rax
-    mov dword [flags], eax
     jmp finalizar_op_16
 
 and_16:
@@ -433,16 +421,10 @@ add_sub_and_or_xor_32:
 
 add_32:
     add edi, edx
-    pushf
-    pop rax
-    mov dword [flags], eax
     jmp finalizar_op_32
 
 sub_32:
     sub edi, edx
-    pushf
-    pop rax
-    mov dword [flags], eax
     jmp finalizar_op_32
 
 and_32:
@@ -462,6 +444,9 @@ finalizar_op_32:
     jmp fim_add_sub_and_or_xor
 
 fim_add_sub_and_or_xor:
+    pushf
+    pop rax
+    mov dword [flags], eax
     add rsi, 3
     jmp executar_instrucoes
 
@@ -525,6 +510,7 @@ fim_not:
 ; ------------------------------------------------------------
 
 jmp_:
+    ; Salta incondicionalmente
     mov rsi, memoria
     mov eax, dword [regs_32 + 16]
     add rsi, rax
