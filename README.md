@@ -19,7 +19,7 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 
 ## 🧠 Registradores
 
-| Registrador | Tamanho  | Opcode | Descrição                        |
+| Registrador | Tamanho  | Código | Descrição                        |
 |:-----------:|:--------:|:------:|:---------------------------------|
 | R80         | 8 bits   | 0      | Uso genérico                     |
 | R81         | 8 bits   | 1      | Uso genérico                     |
@@ -64,9 +64,9 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 
 ## 🔟 Código de máquina
 
-- RegDes (Registrador de destino): Opcode do registrador que armazenará o resultado da instrução
-- RegOrg (Registrador de origem): Opcode do registrador que será utilizado como operando da instrução
-- RegEnd (Registrador de endereço): Opcode do registrador que será utilizado para referenciar uma posição na memória
+- RegDes (Registrador de destino): Código do registrador que armazenará o resultado da instrução
+- RegOrg (Registrador de origem): Código do registrador que será utilizado como operando da instrução
+- RegEnd (Registrador de endereço): Código do registrador que será utilizado para referenciar uma posição na memória (deve ser um registrador de 16 bits)
 - ValOrg (Valor de origem): Valor constante de 16 bits
 
 | Instrução         | Tamanho | Estrutura da instrução                |
