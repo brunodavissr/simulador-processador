@@ -72,7 +72,7 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | Instrução         | Tamanho | Estrutura da instrução                |
 |-------------------|---------|---------------------------------------|
 | LOAD_REGISTRADOR  | 2 bytes | [00] [RegDes&#124;RegOrg]             |
-| LOAD_CONSTANTE    | 4 bytes | [01] [RegDes] [ValOrg] [ValOrg]       |
+| LOAD_CONSTANTE    | 4 bytes | [01] [RegDes&#124;0] [ValOrg] [ValOrg]       |
 | LOAD_MEMORIA      | 2 bytes | [02] [RegDes&#124;RegEnd]             |
 | STORE             | 2 bytes | [03] [RegEnd&#124;RegOrg]             |
 | ADD               | 2 bytes | [04] [RegDes&#124;RegOrg]             |
