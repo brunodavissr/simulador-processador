@@ -44,7 +44,7 @@ Este projeto tem como objetivo simular o funcionamento de um processador hipoté
 | LOAD_REGISTRADOR  | Carrega registrador no registrador     | 00     | `LOAD R160, R161`      |
 | LOAD_CONSTANTE    | Carrega constante no registrador       | 01     | `LOAD R160, 10`        |
 | LOAD_MEMORIA      | Carrega valor da memória no registrador| 02     | `LOAD R160, [R320]`    |
-| STORE             | Armazena valor na memória principal    | 03     | `STORE [R320], R161`   |
+| STORE             | Armazena valor na memória principal    | 03     | `STORE [R160], R161`   |
 | ADD               | Soma dois registradores                | 04     | `ADD R160, R161`       |
 | SUB               | Subtrai dois registradores             | 05     | `SUB R160, R161`       |
 | AND               | Realiza operação lógica AND            | 06     | `AND R160, R161`       |
