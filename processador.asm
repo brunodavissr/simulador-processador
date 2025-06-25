@@ -10,9 +10,6 @@ section .data
 
     flags: dd 0
 
-    fmt_rsi: db "OP: %d", 10, 0
-    fmt_flag: db "Flags: %d", 10, 0
-
     status_sucesso: db "Sucesso!", 0
     status_erro   : db "Erro: formatacao incorreta!"
 
@@ -22,12 +19,9 @@ section .bss
 
 section .text
     global processador
-    extern memoria, printf
+    extern memoria
 
 processador:
-    push rbp
-    mov rbp, rsp
-
     mov rsi, memoria
 
 ; ------------------------------------------------------------
@@ -43,76 +37,72 @@ executar_instrucoes:
 
     mov al, byte [rsi]
 
-    cmp al, 0x0F ; HALT
+    cmp al, 0x11 ; HALT
     je halt_
 
-    cmp al, 0x00 ; LOAD
-    je load_
+    cmp al, 0x00 ; LOAD_REGISTRADOR
+    je load_registrador
 
-    cmp al, 0x01 ; STORE
+    cmp al, 0x01 ; LOAD_CONSTANTE
+    je load_constante
+
+    cmp al, 0x02 ; LOAD_MEMORIA
+    je load_memoria
+
+    cmp al, 0x03 ; STORE
     je store_
 
-    cmp al, 0x02 ; ADD
+    cmp al, 0x04 ; ADD
     je add_sub_and_or_xor
 
-    cmp al, 0x03 ; SUB
+    cmp al, 0x05 ; SUB
     je add_sub_and_or_xor
 
-    cmp al, 0x04 ; AND
+    cmp al, 0x06 ; AND
     je add_sub_and_or_xor
 
-    cmp al, 0x05 ; OR
+    cmp al, 0x07 ; OR
     je add_sub_and_or_xor
 
-    cmp al, 0x06 ; XOR
+    cmp al, 0x08 ; XOR
     je add_sub_and_or_xor
 
-    cmp al, 0x07 ; NOT
+    cmp al, 0x09 ; NOT
     je not_
 
-    cmp al, 0x08 ; JMP
+    cmp al, 0x0A ; JMP
     je jmp_
 
-    cmp al, 0x09 ; JZ
+    cmp al, 0x0B ; JZ
     je jz_
 
-    cmp al, 0x0A ; JNZ
+    cmp al, 0x0C ; JNZ
     je jnz_
 
-    cmp al, 0x0B ; JL
+    cmp al, 0x0D ; JL
     je jl_
 
-    cmp al, 0x0C ; JG
+    cmp al, 0x0E ; JG
     je jg_
 
-    cmp al, 0x0D ; JC
+    cmp al, 0x0F ; JC
     je jc_
 
-    cmp al, 0x0E ; JNC
+    cmp al, 0x10 ; JNC
     je jnc_
 
     jmp erro
 
 ; ------------------------------------------------------------
-;                           LOAD
+;                      LOAD REGISTRADOR
 ; ------------------------------------------------------------
-
-load_:
-    mov al, byte [rsi + 2]
-
-    ; Direciona de acordo com o tipo de operação
-    cmp al, 0x00
-    je load_registrador
-    cmp al, 0x01
-    je load_constante
-    cmp al, 0x02
-    je load_memoria
-
-    jmp erro
 
 load_registrador:
     mov al, byte [rsi + 1]
-    mov bl, byte [rsi + 3]
+    mov bl, byte [rsi + 1]
+
+    shr al, 4
+    and bl, 0x0F
 
     ; Direciona de acordo com o tamanho do registrador
     cmp al, 0x04
@@ -139,7 +129,7 @@ load_registrador_8:
 
     mov byte [rcx], dl
 
-    jmp fim_load
+    jmp fim_load_registrador
 
 load_registrador_16:
     cmp bl, 0x07
@@ -162,7 +152,7 @@ load_registrador_16:
 
     mov word [rcx], dx
 
-    jmp fim_load
+    jmp fim_load_registrador
 
 load_registrador_32:
     cmp bl, 0x0C
@@ -185,11 +175,25 @@ load_registrador_32:
 
     mov dword [rcx], edx
 
-    jmp fim_load
+    jmp fim_load_registrador
+
+fim_load_registrador:
+    add rsi, 2
+    jmp executar_instrucoes
+
+; ------------------------------------------------------------
+;                      LOAD CONSTANTE
+; ------------------------------------------------------------
 
 load_constante:
     mov al, byte [rsi + 1]
-    mov bl, byte [rsi + 3]
+    shr al, 4
+
+    mov cl, byte [rsi + 2]
+    mov dl, byte [rsi + 3]
+
+    mov bl, dl
+    mov bh, cl
 
     ; Direciona de acordo com o tamanho do registrador
     cmp al, 0x04
@@ -198,14 +202,13 @@ load_constante:
     jl load_constante_16
     cmp al, 0x0D
     jl load_constante_32
-
     jmp erro
 
 load_constante_8:
     mov rcx, regs_8
     add rcx, rax
     mov byte [rcx], bl
-    jmp fim_load
+    jmp fim_load_constante
 
 load_constante_16:
     mov rcx, regs_16
@@ -213,7 +216,7 @@ load_constante_16:
     shl rax, 1
     add rcx, rax
     mov word [rcx], bx
-    jmp fim_load
+    jmp fim_load_constante
 
 load_constante_32:
     mov rcx, regs_32
@@ -221,20 +224,31 @@ load_constante_32:
     shl rax, 2
     add rcx, rax
     mov dword [rcx], ebx
-    jmp fim_load
+    jmp fim_load_constante
+
+fim_load_constante:
+    add rsi, 4
+    jmp executar_instrucoes
+
+; ------------------------------------------------------------
+;                      LOAD MEMÓRIA
+; ------------------------------------------------------------
 
 load_memoria:
     mov al, byte [rsi + 1]
-    mov bl, byte [rsi + 3]
+    mov bl, byte [rsi + 1]
 
-    cmp bl, 0x08
+    shr al, 4
+    and bl, 0x0F
+
+    cmp bl, 0x04
     jl erro
-    cmp bl, 0x0C
+    cmp bl, 0x07
     jg erro
 
-    mov rdx, regs_32
-    sub rbx, 0x08
-    shl rbx, 2
+    mov rdx, regs_16
+    sub rbx, 0x04
+    shl rbx, 1
     add rdx, rbx
     mov edx, dword [rdx]
 
@@ -255,7 +269,7 @@ load_memoria_8:
 
     mov byte [rcx], dl
 
-    jmp fim_load
+    jmp fim_load_memoria
 
 load_memoria_16:
     mov rcx, regs_16
@@ -268,7 +282,7 @@ load_memoria_16:
 
     mov word [rcx], dx
 
-    jmp fim_load
+    jmp fim_load_memoria
 
 load_memoria_32:
     mov rcx, regs_32
@@ -281,10 +295,10 @@ load_memoria_32:
 
     mov dword [rcx], edx
 
-    jmp fim_load
+    jmp fim_load_memoria
 
-fim_load:
-    add rsi, 4
+fim_load_memoria:
+    add rsi, 2
     jmp executar_instrucoes
 
 ; ------------------------------------------------------------
@@ -293,16 +307,19 @@ fim_load:
 
 store_:
     mov al, byte [rsi + 1]
-    mov bl, byte [rsi + 2]
+    mov bl, byte [rsi + 1]
+    shr al, 4
+    and bl, 0x0F
 
-    cmp al, 0x08
+    ; Aceita apenas registradores de 16 bits
+    cmp al, 0x04
     jl erro
-    cmp al, 0x0C
+    cmp al, 0x07
     jg erro
 
-    mov rcx, regs_32
-    sub rax, 0x08
-    shl rax, 2
+    mov rcx, regs_16
+    sub rax, 0x04
+    shl rax, 1
     add rcx, rax
     mov ecx, dword [rcx]
 
@@ -349,7 +366,7 @@ store_32:
     jmp fim_store
 
 fim_store:
-    add rsi, 3
+    add rsi, 2
     jmp executar_instrucoes
 
 ; ------------------------------------------------------------
@@ -359,7 +376,10 @@ fim_store:
 add_sub_and_or_xor:
     push rax
     mov al, byte [rsi + 1]
-    mov bl, byte [rsi + 2]
+    mov bl, byte [rsi + 1]
+
+    shr al, 4
+    and bl, 0x0F
 
     cmp al, 0x04
     jl add_sub_and_or_xor_8
@@ -389,16 +409,16 @@ add_sub_and_or_xor_8:
     mov dl, byte [rdx]
 
     pop rax
-    cmp al, 0x02
+    cmp al, 0x04
     je add_8
 
-    cmp al, 0x03
+    cmp al, 0x05
     je sub_8
 
-    cmp al, 0x04
+    cmp al, 0x06
     je and_8
 
-    cmp al, 0x05
+    cmp al, 0x07
     je or_8
 
     jmp xor_8
@@ -450,16 +470,16 @@ add_sub_and_or_xor_16:
     mov dx, word [rdx]
 
     pop rax
-    cmp al, 0x02
+    cmp al, 0x04
     je add_16
 
-    cmp al, 0x03
+    cmp al, 0x05
     je sub_16
 
-    cmp al, 0x04
+    cmp al, 0x06
     je and_16
 
-    cmp al, 0x05
+    cmp al, 0x07
     je or_16
 
     jmp xor_16
@@ -511,16 +531,16 @@ add_sub_and_or_xor_32:
     mov edx, dword [rdx]
 
     pop rax
-    cmp al, 0x02
+    cmp al, 0x04
     je add_32
 
-    cmp al, 0x03
+    cmp al, 0x05
     je sub_32
 
-    cmp al, 0x04
+    cmp al, 0x06
     je and_32
 
-    cmp al, 0x05
+    cmp al, 0x07
     je or_32
 
     jmp xor_32
@@ -555,7 +575,7 @@ fim_add_sub_and_or_xor:
     pop rax
     mov dword [flags], eax
 
-    add rsi, 3
+    add rsi, 2
     jmp executar_instrucoes
 
 ; ------------------------------------------------------------
@@ -564,6 +584,7 @@ fim_add_sub_and_or_xor:
 
 not_:
     mov al, byte [rsi + 1]
+    shr al, 4
 
     ; Direciona de acordo com o tamanho do registrador
     cmp al, 0x04
@@ -750,5 +771,4 @@ erro:
 ; ------------------------------------------------------------
 
 fim:
-    pop rbp
     ret
